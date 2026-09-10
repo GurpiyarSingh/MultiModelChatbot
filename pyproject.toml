@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-model-chatbot"
+version = "0.0.1"
+description = "A minimal local FastAPI multi-model chatbot prototype"
+requires-python = ">=3.10"
+
+[project.scripts]
+chatbot = "cli.main:app"
+
+[tool.setuptools]
+packages = ["app", "app.providers", "cli"]
