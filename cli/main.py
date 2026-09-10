@@ -19,6 +19,7 @@ VERSION = (Path(__file__).resolve().parents[1] / "VERSION").read_text(encoding="
 
 
 def version_callback(value: bool) -> None:
+    """Print the package version and exit when the --version flag is used."""
     if value:
         console.print(VERSION)
         raise typer.Exit()
@@ -36,6 +37,7 @@ def chat(
 ) -> None:
     """Start an interactive streaming chat. Type /exit to leave."""
     async def run() -> None:
+        """Prompt the user, stream model replies, and keep the session alive."""
         nonlocal session
         client = ChatbotClient(BACKEND_URL)
         console.print("[dim]Type /exit to end the chat.[/dim]")
@@ -69,7 +71,9 @@ def chat(
 
 @sessions_app.command("list")
 def sessions_list() -> None:
+    """Display the saved session summaries from the server in a table."""
     async def run() -> None:
+        """Fetch session summaries and render them for terminal inspection."""
         rows = await ChatbotClient(BACKEND_URL).get("/sessions")
         table = Table("Session", "Model", "Messages", "Updated")
         for row in rows:
@@ -80,7 +84,9 @@ def sessions_list() -> None:
 
 @models_app.command("list")
 def models_list() -> None:
+    """Display the backend model catalog and each model's availability."""
     async def run() -> None:
+        """Request and render model metadata for the configured providers."""
         rows = await ChatbotClient(BACKEND_URL).get("/models")
         table = Table("Model", "Provider", "Available")
         for row in rows:

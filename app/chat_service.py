@@ -14,11 +14,15 @@ from app.session_store import SessionStore
 
 
 class ChatService:
+    """Coordinate model selection, session lifecycle, and provider execution."""
+
     def __init__(self, settings: Settings, store: SessionStore) -> None:
+        """Store the runtime settings and persistence layer used by the app."""
         self.settings = settings
         self.store = store
 
     def model_infos(self) -> list[ModelInfo]:
+        """Return the configured model catalog with availability metadata."""
         return [
             ModelInfo(id="claude-sonnet", provider="anthropic", available=bool(self.settings.anthropic_api_key)),
             ModelInfo(id="gpt-4o-mini", provider="openai", available=bool(self.settings.openai_api_key)),
@@ -28,6 +32,7 @@ class ChatService:
         ]
 
     def _provider(self, model: str) -> ModelProvider:
+        """Resolve the right provider implementation for a requested model name."""
         normalized = model.lower()
         if normalized.startswith(("claude", "anthropic/")):
             if not self.settings.anthropic_api_key:
@@ -50,6 +55,7 @@ class ChatService:
         raise HTTPException(400, f"Unknown model '{model}'. Use /models to see configured choices.")
 
     def start(self, request: ChatRequest) -> tuple[str, str, ModelProvider, list[Message]]:
+        """Prepare a provider and session for a new user prompt."""
         model = request.model or self.settings.default_model
         provider = self._provider(model)
         try:
@@ -60,12 +66,14 @@ class ChatService:
         return session_id, model, provider, self.store.messages(session_id)
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
+        """Generate a complete model reply and persist it to the active session."""
         session_id, model, provider, messages = self.start(request)
         reply = "".join([chunk async for chunk in provider.generate(messages, stream=False)])
         self.store.add_message(session_id, Message(role="assistant", content=reply))
         return ChatResponse(session_id=session_id, model=model, message=Message(role="assistant", content=reply))
 
     async def stream(self, request: ChatRequest) -> AsyncIterator[tuple[str, str]]:
+        """Stream tokens from the selected provider while persisting the final assistant reply."""
         session_id, model, provider, messages = self.start(request)
         reply = ""
         async for chunk in provider.generate(messages, stream=True):

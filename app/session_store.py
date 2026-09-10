@@ -10,11 +10,13 @@ class SessionStore:
     """Single-process session storage, persisted to one JSON file after each change."""
 
     def __init__(self, file_path: Path) -> None:
+        """Initialize the store and load any existing session data from disk."""
         self.file_path = file_path
         self.sessions: dict[str, dict] = {}
         self._load()
 
     def _load(self) -> None:
+        """Read persisted sessions from disk into memory if the file exists."""
         if not self.file_path.exists():
             return
         try:
@@ -25,10 +27,12 @@ class SessionStore:
             raise RuntimeError(f"Could not read sessions file {self.file_path}: {exc}") from exc
 
     def _save(self) -> None:
+        """Persist the in-memory session dictionary to the JSON data file."""
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         self.file_path.write_text(json.dumps(self.sessions, indent=2), encoding="utf-8")
 
     def create_or_get(self, session_id: str | None, model: str) -> str:
+        """Return an existing session ID or create a new session for the selected model."""
         if session_id and session_id in self.sessions:
             return session_id
         if session_id:
@@ -40,14 +44,17 @@ class SessionStore:
         return session_id
 
     def messages(self, session_id: str) -> list[Message]:
+        """Decode and return the stored message history for a session."""
         return [Message.model_validate(item) for item in self.sessions[session_id]["messages"]]
 
     def add_message(self, session_id: str, message: Message) -> None:
+        """Append one message to a session and persist the updated timestamps."""
         self.sessions[session_id]["messages"].append(message.model_dump())
         self.sessions[session_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
         self._save()
 
     def detail(self, session_id: str) -> SessionDetail:
+        """Build the detailed session view including all stored messages."""
         session = self.sessions[session_id]
         return SessionDetail(
             id=session_id, model=session["model"], message_count=len(session["messages"]),
@@ -55,6 +62,7 @@ class SessionStore:
         )
 
     def list(self) -> list[SessionSummary]:
+        """Return all sessions sorted from newest to oldest by last update time."""
         return sorted(
             [
                 SessionSummary(id=sid, model=data["model"], message_count=len(data["messages"]), updated_at=data["updated_at"])
