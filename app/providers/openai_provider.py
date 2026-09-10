@@ -7,11 +7,15 @@ from app.schemas import Message
 
 
 class OpenAIProvider(ModelProvider):
+    """OpenAI chat completion provider backed by the async SDK."""
+
     def __init__(self, api_key: str, model: str) -> None:
+        """Create the async OpenAI client and store the default model name."""
         self.client = AsyncOpenAI(api_key=api_key)
         self.model = model
 
     async def generate(self, messages: list[Message], stream: bool = True) -> AsyncIterator[str]:
+        """Yield the model's response text either as a stream or as a single final answer."""
         response = await self.client.chat.completions.create(
             model=self.model, messages=[message.model_dump() for message in messages], stream=stream
         )

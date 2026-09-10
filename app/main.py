@@ -19,17 +19,21 @@ service = ChatService(settings, store)
 
 @app.get("/health")
 async def health() -> dict[str, str]:
+    """Return a lightweight service status payload for health checks."""
     return {"status": "ok", "version": app.version}
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
+    """Generate a complete response for a single chat request."""
     return await service.chat(request)
 
 
 @app.post("/chat/stream")
 async def chat_stream(request: ChatRequest) -> StreamingResponse:
+    """Stream response tokens as server-sent events for interactive clients."""
     async def events() -> AsyncIterator[str]:
+        """Yield each token and terminal stream event as a JSON SSE payload."""
         session_id: str | None = None
         try:
             async for session_id, token in service.stream(request):
@@ -44,11 +48,13 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
 
 @app.get("/sessions", response_model=list[SessionSummary])
 async def list_sessions() -> list[SessionSummary]:
+    """List the saved conversation summaries in reverse chronological order."""
     return store.list()
 
 
 @app.get("/sessions/{session_id}", response_model=SessionDetail)
 async def get_session(session_id: str) -> SessionDetail:
+    """Fetch one conversation record and all of its messages by session ID."""
     try:
         return store.detail(session_id)
     except KeyError:
@@ -57,4 +63,5 @@ async def get_session(session_id: str) -> SessionDetail:
 
 @app.get("/models", response_model=list[ModelInfo])
 async def list_models() -> list[ModelInfo]:
+    """Expose the configured model catalog and provider availability to clients."""
     return service.model_infos()
