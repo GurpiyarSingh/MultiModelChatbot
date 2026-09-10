@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multi-Model Chatbot</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">AI</div>
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h1>Multi-Model Chatbot</h1>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="field-group">
+            <label for="modelSelect">Active model</label>
+            <select id="modelSelect"></select>
+          </div>
+
+          <button id="newChatBtn" class="secondary-btn">+ New chat</button>
+        </div>
+
+        <div class="session-panel">
+          <div class="panel-header">
+            <h2>Recent sessions</h2>
+            <button id="refreshSessionsBtn" class="text-btn">Refresh</button>
+          </div>
+          <ul id="sessionList" class="session-list"></ul>
+        </div>
+      </aside>
+
+      <main class="chat-panel">
+        <header class="chat-header">
+          <div>
+            <p class="eyebrow">Conversation</p>
+            <h2 id="chatTitle">New chat</h2>
+          </div>
+          <div class="header-actions">
+            <span id="statusBadge" class="status-badge">Ready</span>
+          </div>
+        </header>
+
+        <div class="metrics-strip" aria-label="Conversation metrics">
+          <div class="metric-card">
+            <span class="metric-label">Chat tokens</span>
+            <strong id="chatTokenCount">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Session tokens</span>
+            <strong id="sessionTokenCount">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Messages</span>
+            <strong id="messageCount">0</strong>
+          </div>
+        </div>
+
+        <div id="messages" class="messages" aria-live="polite"></div>
+
+        <form id="chatForm" class="composer">
+          <textarea
+            id="messageInput"
+            rows="1"
+            placeholder="Ask a question..."
+            aria-label="Message input"
+          ></textarea>
+          <button type="submit">Send</button>
+        </form>
+      </main>
+    </div>
+
+    <script src="/web/app.js"></script>
+  </body>
+</html>

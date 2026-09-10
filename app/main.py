@@ -3,7 +3,8 @@ import logging
 from collections.abc import AsyncIterator
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.chat_service import ChatService
 from app.config import settings
@@ -12,9 +13,18 @@ from app.session_store import SessionStore
 
 logging.basicConfig(level=settings.log_level, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-app = FastAPI(title="Multi-Model Chatbot", version="0.0.1")
+app = FastAPI(title="Multi-Model Chatbot", version="0.1.0")
 store = SessionStore(settings.sessions_file)
 service = ChatService(settings, store)
+
+app.mount("/web", StaticFiles(directory="web"), name="web")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index() -> HTMLResponse:
+    """Serve the browser-based chatbot frontend for local use."""
+    with open("web/index.html", "r", encoding="utf-8") as file:
+        return HTMLResponse(file.read())
 
 
 @app.get("/health")
